@@ -5,7 +5,21 @@ import GUI from 'lil-gui'
 
 /* Debug */
 
-const gui = new GUI()
+const gui = new GUI({
+  width: 300,
+  title: 'Best Debug',
+})
+
+// gui.close()
+
+// Alternar la visiblidad del depugador lil-gui
+// gui.hide()
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'h') {
+    gui.show(gui._hidden)
+  }
+})
 
 const debugObject = {} // 1ER PASO
 
@@ -17,6 +31,17 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+
+/* folders para lil-gui , para debuguear*/
+
+const positionCUbeTweaks = gui.addFolder('Position')
+
+const aspectCubeTweaks = gui.addFolder('Aspect')
+aspectCubeTweaks.close()
+
+const animationCubeTweaks = gui.addFolder('Animation')
+
+const folderExample = animationCubeTweaks.addFolder('Example folder')
 
 /**
  * Object
@@ -34,17 +59,22 @@ scene.add(mesh)
 // agregar el mesh a la debug gui //////////////////////
 // gui.add(mesh.position, 'x', -3, 3, 0.01)
 
-gui.add(mesh.position, 'x').min(-3).max(3).step(0.01).name('posicion x')
+positionCUbeTweaks
+  .add(mesh.position, 'x')
+  .min(-3)
+  .max(3)
+  .step(0.01)
+  .name('posicion x')
 
 // prettier-ignore
-gui.add(mesh.position, 'y')
+positionCUbeTweaks.add(mesh.position, 'y')
     .min(-3)
     .max(3)
     .step(0.01)
     .name('posicion y')
 
 // prettier-ignore
-gui.add(mesh.position, 'z')
+positionCUbeTweaks.add(mesh.position, 'z')
     .min(-3)
     .max(3)
     .step(0.01)
@@ -67,9 +97,9 @@ gui.add(mesh.position, 'z')
 // prettier-ignore
 // gui.add(myObject, 'isGood')
 
-gui.add(mesh, 'visible')
+aspectCubeTweaks.add(mesh, 'visible')
 
-gui.add(material, 'wireframe')
+aspectCubeTweaks.add(material, 'wireframe')
 
 // console.log(material.color)
 
@@ -79,7 +109,7 @@ gui.add(material, 'wireframe')
 // })
 
 // prettier-ignore
-gui
+aspectCubeTweaks
     .addColor(debugObject, 'color') // 3ER PASO
     .onChange(() => {
         material.color.set(debugObject.color)
@@ -90,10 +120,33 @@ gui
 // }
 
 debugObject.spin = () => {
-  gsap.to(mesh.rotation, { duration: 3, y: mesh.rotation.y + Math.PI * 2 })
+  gsap.to(mesh.rotation, { duration: 1, y: mesh.rotation.y + Math.PI * 2 })
 }
 
-gui.add(debugObject, 'spin')
+animationCubeTweaks.add(debugObject, 'spin')
+
+debugObject.subdivision = 2
+
+aspectCubeTweaks
+  .add(debugObject, 'subdivision')
+  .min(1)
+  .max(20)
+  .step(1)
+  .onFinishChange(() => {
+    console.log('hola')
+
+    mesh.geometry.dispose() // para que no se acumulen valores en memoria / mejorar rendimiento
+    /* siempre ponerlo antes */
+
+    mesh.geometry = new THREE.BoxGeometry(
+      1,
+      1,
+      1,
+      debugObject.subdivision,
+      debugObject.subdivision,
+      debugObject.subdivision
+    )
+  })
 
 ///////////////////////////////////////////////////////
 /**
